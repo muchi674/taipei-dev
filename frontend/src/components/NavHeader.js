@@ -20,8 +20,8 @@ function NavHeader() {
             <Nav.Link as={Link} to="users/0/bids">
               my bids
             </Nav.Link>
-            <Nav.Link as={Link} to="/auth">
-              log in
+            <Nav.Link as={Link} to="/signin">
+              Sign In
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>

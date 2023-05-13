@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import NavHeader from "./components/NavHeader";
+import SignIn from "./components/SignIn";
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
             path="users/:userId/bids"
             element={<h1>Cocaine is hell of a drug</h1>}
           />
-          <Route path="/auth" element={<h1>log in with Google</h1>} />
+          <Route path="/signin" element={<SignIn />} />
           <Route path="/*" element={<Navigate replace to="/home" />} />
         </Routes>
       </main>
