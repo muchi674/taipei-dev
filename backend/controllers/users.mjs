@@ -1,43 +1,42 @@
-import { OAuth2Client } from "google-auth-library";
+import db from "../utils/dbConn.mjs";
+import { getSignedInToken } from "../utils/signedInToken.mjs";
+import { HttpError } from "../utils/httpError.mjs";
+import { verify } from "../utils/googleIdToken.mjs";
 
-import db from "../db/conn.mjs";
+async function signIn(req, res, next) {
+  const verificationResponse = await verify(req.body.credential);
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const client = new OAuth2Client(CLIENT_ID);
-
-async function verify(token) {
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: CLIENT_ID,
-    });
-    return { payload: ticket.getPayload() };
-  } catch (error) {
-    return { error: error.message };
+  if ("error" in verificationResponse) {
+    return next(new HttpError("Authentication Failed", 401));
   }
-}
 
-async function insertOrUpdate(user) {
-  const query = { _id: user["sub"] };
+  const { payload } = verificationResponse;
+  const query = { _id: payload["sub"] };
   const update = {
     $set: {
-      family_name: user["family_name"],
-      given_name: user["given_name"],
+      email: payload["email"],
+      family_name: payload["family_name"],
+      given_name: payload["given_name"],
     },
   };
   const options = { upsert: true };
-  let succeeded;
 
   try {
     await db.collection("users").updateOne(query, update, options);
-    succeeded = true;
   } catch (error) {
-    succeeded = false;
+    return next(new HttpError("Sign In/Up Failed", 500));
   }
 
-  return succeeded;
-}
+  const authorizationResponse = getSignedInToken(payload["sub"]);
 
-async function signIn(req, res, next) {}
+  if ("error" in authorizationResponse) {
+    return next(new HttpError("Authorization Failed", 500));
+  }
+
+  res.json({
+    userId: payload["sub"],
+    token: authorizationResponse["token"],
+  });
+}
 
 export { signIn };
