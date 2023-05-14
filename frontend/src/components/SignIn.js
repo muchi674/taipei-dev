@@ -9,8 +9,7 @@ function SignIn() {
   useEffect(() => {
     const google = window.google;
     google.accounts.id.initialize({
-      client_id:
-        "200400789328-1s3ira698sa9s2p3mqpu0semd368haq9.apps.googleusercontent.com",
+      client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
       callback: credentialResponseHandler,
     });
     google.accounts.id.renderButton(
