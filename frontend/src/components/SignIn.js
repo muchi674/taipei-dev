@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect } from "react";
-import Stack from "react-bootstrap/Stack";
+import Container from "react-bootstrap/Container";
+import Col from "react-bootstrap/Col";
+import Row from "react-bootstrap/Row";
 
 function SignIn() {
   const credentialResponseHandler = useCallback(async (response) => {
@@ -34,9 +36,11 @@ function SignIn() {
   }, [credentialResponseHandler]);
 
   return (
-    <Stack gap={2} className="col-md-5 mx-auto">
-      <div id="googleSignInButton"></div>
-    </Stack>
+    <Container>
+      <Row className="justify-content-md-center">
+        <Col id="googleSignInButton" md="auto" />
+      </Row>
+    </Container>
   );
 }
 

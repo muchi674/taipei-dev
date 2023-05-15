@@ -17,6 +17,7 @@ async function signIn(req, res, next) {
       email: payload["email"],
       family_name: payload["family_name"],
       given_name: payload["given_name"],
+      picture: payload["picture"],
     },
   };
   const options = { upsert: true };
