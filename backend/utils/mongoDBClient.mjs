@@ -2,14 +2,12 @@ import { MongoClient } from "mongodb";
 
 const connectionString = process.env.MONGODB_CONNECTION_STRING || "";
 const client = new MongoClient(connectionString);
-let conn;
 
 try {
-  conn = await client.connect();
+  await client.connect();
 } catch (error) {
-  console.error(error);
+  await client.close();
+  throw error;
 }
 
-let db = conn.db("bakiAuctionsDB");
-
-export default db;
+export default client;
