@@ -46,6 +46,11 @@ async function signIn(req, res, next) {
     await session.endSession();
   }
 
+  /*
+  session doc is expired 1 hr after its createdAt value;
+  cookie expires in 59 minutes.
+  */
+
   res
     .status(201)
     .cookie("sessionId", signedInSessionId, {
