@@ -3,8 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import NavHeader from "./components/NavHeader";
 import SignIn from "./components/SignIn";
+import { useCSRFToken } from "./hooks/useCSRFToken";
 
 function App() {
+  useCSRFToken();
+
   return (
     <BrowserRouter>
       <NavHeader />
