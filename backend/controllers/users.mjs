@@ -1,22 +1,22 @@
-import client from "../utils/mongoDBClient.mjs";
+import mongoDBClient from "../utils/mongoDBClient.mjs";
 import { HttpError } from "../utils/httpError.mjs";
-import { verify } from "../utils/googleIdToken.mjs";
+import { verifyGoogleIdToken } from "../utils/googleIdToken.mjs";
 
 async function signIn(req, res, next) {
-  const verificationResponse = await verify(req.body.credential);
+  const verificationResponse = await verifyGoogleIdToken(req.body.credential);
 
   if ("error" in verificationResponse) {
     return next(new HttpError("Authentication Failed", 401));
   }
 
   const { payload } = verificationResponse;
-  const session = client.startSession();
+  const session = mongoDBClient.startSession();
   let signedInSessionId;
 
   try {
     session.startTransaction();
 
-    const bakiAuctionsDB = client.db("bakiAuctionsDB");
+    const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
 
     await bakiAuctionsDB.collection("users").updateOne(
       { _id: payload["sub"] },
@@ -57,7 +57,6 @@ async function signIn(req, res, next) {
       httpOnly: true,
       maxAge: 59 * 60 * 1000,
       secure: true,
-      signed: true,
       sameSite: "none",
     })
     .send();

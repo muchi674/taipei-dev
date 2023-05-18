@@ -15,14 +15,13 @@ function getCSRFToken(req, res, next) {
       httpOnly: true,
       maxAge: 59 * 60 * 1000,
       secure: true,
-      signed: true,
       sameSite: "none",
     })
     .json({ csrfToken });
 }
 
 function verifyCSRFToken(req, res, next) {
-  const cookieCSRFToken = req.signedCookies.csrfToken;
+  const cookieCSRFToken = req.cookies.csrfToken;
   const headerCSRFToken = req.get("X-CSRF-Token");
 
   if (!cookieCSRFToken || !headerCSRFToken) {
