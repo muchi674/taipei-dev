@@ -1,5 +1,7 @@
 import { randomBytes } from "crypto";
 
+import { HttpError } from "../utils/httpError.mjs";
+
 function getCSRFToken(req, res, next) {
   let csrfToken;
 

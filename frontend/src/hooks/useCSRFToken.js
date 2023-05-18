@@ -4,8 +4,8 @@ import axios from "axios";
 function useCSRFToken() {
   useEffect(() => {
     const getCSRFToken = async () => {
-      const { csrfToken } = await axios.get("/csrfToken");
-      axios.defaults.headers.post["X-CSRF-Token"] = csrfToken;
+      const response = await axios.get("/csrfToken");
+      axios.defaults.headers.post["X-CSRF-Token"] = response.data.csrfToken;
     };
     getCSRFToken();
   }, []);

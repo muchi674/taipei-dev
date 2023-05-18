@@ -15,7 +15,7 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.get("/csrfToken", getCSRFToken);
-app.use(verifyCSRFToken);
+app.post("*", verifyCSRFToken);
 app.use(verifySession);
 app.use("/users", usersRoutes);
 app.use(handleHTTPError);
