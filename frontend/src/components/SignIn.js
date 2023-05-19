@@ -7,7 +7,7 @@ import Row from "react-bootstrap/Row";
 import { useSignInWithGoogle } from "../hooks/useSignInWithGoogle";
 
 function SignIn() {
-  const [showAlert, setShowAlert, alertMessage] = useSignInWithGoogle;
+  const [showAlert, setShowAlert, alertMessage] = useSignInWithGoogle();
 
   return (
     <>

@@ -1,9 +1,11 @@
 import express from "express";
 
-import { signIn } from "../controllers/users.mjs";
+import { verifyGoogleIdToken } from "../middlewares/googleIdToken.mjs";
+import { createUser } from "../controllers/users.mjs";
+import { createSession } from "../middlewares/session.mjs";
 
 const router = express.Router();
 
-router.post("/", signIn);
+router.post("/", verifyGoogleIdToken, createUser, createSession);
 
 export default router;
