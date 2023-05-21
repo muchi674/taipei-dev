@@ -1,18 +1,20 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import { useAppSetup } from "./hooks/useAppSetup";
+import { AppContext } from "./context/AppContext";
+import Notice from "./components/Notice";
 import NavHeader from "./components/NavHeader";
 import Account from "./components/Account";
-import { useBackendSetup } from "./hooks/useBackendSetup";
-import { AuthContext } from "./context/AuthContext";
 
 function App() {
-  const signInStatus = useBackendSetup();
+  const appSetup = useAppSetup();
 
   return (
     <BrowserRouter>
-      <AuthContext.Provider value={signInStatus}>
+      <AppContext.Provider value={appSetup}>
         <NavHeader />
+        <Notice />
         <main>
           <Routes>
             <Route path="/home" element={<h1>I'm Rick James, bitch</h1>} />
@@ -28,7 +30,7 @@ function App() {
             <Route path="/*" element={<Navigate replace to="/home" />} />
           </Routes>
         </main>
-      </AuthContext.Provider>
+      </AppContext.Provider>
     </BrowserRouter>
   );
 }

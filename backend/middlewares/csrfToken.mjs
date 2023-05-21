@@ -15,7 +15,7 @@ function createCSRFToken(req, res, next) {
     .cookie("csrfToken", csrfToken, {
       encode: String,
       httpOnly: true,
-      maxAge: 59 * 60 * 1000,
+      expires: new Date(Date.now() + 59 * 60 * 1000),
       secure: true,
       signed: true,
       sameSite: "none",

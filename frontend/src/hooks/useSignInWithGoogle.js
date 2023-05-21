@@ -1,35 +1,57 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 
-import { AuthContext } from "../context/AuthContext";
+import { AppContext } from "../context/AppContext";
 
 function useSignInWithGoogle() {
-  const { isSignedIn, setIsSignedIn } = useContext(AuthContext);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
+  const {
+    isSignedIn,
+    setIsSignedIn,
+    scheduleSignOut,
+    setShowAlert,
+    setAlertMessage,
+  } = useContext(AppContext);
 
-  const verifyIDTokenOnBackend = useCallback(
+  const signInWithIDTokenOnBackend = useCallback(
     async (response) => {
+      let backendResponse;
+
       try {
-        await axios.post("/users", { idToken: response.credential });
-        setIsSignedIn(true);
+        backendResponse = await axios.post("/users", {
+          idToken: response.credential,
+        });
       } catch (error) {
-        setIsSignedIn(false);
-        setShowAlert(true);
-        setAlertMessage(
-          `${error.response.status}. ${error.response.data.message}`
-        );
+        if (error.response && error.response.status === 401) {
+          setShowAlert(true);
+          setAlertMessage(
+            `${error.response.status}. ${error.response.data.message}`
+          );
+          return;
+        }
+        throw error;
       }
+
+      const signOutDate = backendResponse.data.signOutDate;
+      const succeeded = scheduleSignOut(signOutDate);
+
+      if (!succeeded) {
+        setShowAlert(true);
+        setAlertMessage("Session expired. Please sign in again.");
+        return;
+      }
+
+      localStorage.setItem("signOutDate", signOutDate);
+      setIsSignedIn(true);
     },
-    [setIsSignedIn] // a useState set function that doesn't change
+    [setIsSignedIn, scheduleSignOut, setShowAlert, setAlertMessage]
   );
 
   useMemo(() => {
     window.google.accounts.id.initialize({
       client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-      callback: verifyIDTokenOnBackend,
+      callback: signInWithIDTokenOnBackend,
     });
-  }, [verifyIDTokenOnBackend]);
+  }, [signInWithIDTokenOnBackend]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -41,8 +63,6 @@ function useSignInWithGoogle() {
       );
     }
   }, [isSignedIn]);
-
-  return [showAlert, setShowAlert, alertMessage];
 }
 
 export { useSignInWithGoogle };

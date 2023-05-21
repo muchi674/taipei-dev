@@ -5,6 +5,7 @@ import { HttpError } from "../utils/httpError.mjs";
 
 async function createSession(req, res, next) {
   const { googleIdTokenPayload } = req;
+  const creationDate = new Date();
   let sessionId;
 
   try {
@@ -12,7 +13,7 @@ async function createSession(req, res, next) {
     const sessions = bakiAuctionsDB.collection("sessions");
     const result = await sessions.insertOne({
       userId: googleIdTokenPayload["sub"],
-      createdAt: new Date(),
+      createdAt: creationDate,
     });
 
     sessionId = result.insertedId;
@@ -25,16 +26,18 @@ async function createSession(req, res, next) {
   cookie expires in 59 minutes.
   */
 
+  const cookieExpirationDate = new Date(creationDate.getTime() + 60 * 1000);
+
   res
     .status(201)
     .cookie("sessionId", sessionId, {
       httpOnly: true,
-      maxAge: 59 * 60 * 1000,
+      expires: cookieExpirationDate,
       secure: true,
       signed: true,
       sameSite: "none",
     })
-    .send();
+    .json({ signOutDate: cookieExpirationDate });
 }
 
 async function verifySession(req, res, next) {
