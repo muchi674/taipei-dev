@@ -15,13 +15,13 @@ function NavHeader() {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="users/0/lots">
-              my lots
+              Lots
             </Nav.Link>
             <Nav.Link as={Link} to="users/0/bids">
-              my bids
+              Bids
             </Nav.Link>
-            <Nav.Link as={Link} to="/signin">
-              Sign In
+            <Nav.Link as={Link} to="/account">
+              Account
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>

@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useContext } from "react";
 import Alert from "react-bootstrap/Alert";
 import Container from "react-bootstrap/Container";
-import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import Button from "react-bootstrap/Button";
 
+import { AuthContext } from "../context/AuthContext";
 import { useSignInWithGoogle } from "../hooks/useSignInWithGoogle";
 
-function SignIn() {
+function Account() {
+  const { isSignedIn, signOut } = useContext(AuthContext);
   const [showAlert, setShowAlert, alertMessage] = useSignInWithGoogle();
 
   return (
@@ -19,13 +22,18 @@ function SignIn() {
       >
         {alertMessage}
       </Alert>
-      <Container>
+      <Container className="p-3">
         <Row className="justify-content-md-center">
-          <Col id="googleSignInButton" md="auto" />
+          {!isSignedIn && <Col id="googleSignInButton" md="auto" />}
+          {isSignedIn && (
+            <Button variant="outline-dark" onClick={signOut}>
+              Sign Out
+            </Button>
+          )}
         </Row>
       </Container>
     </>
   );
 }
 
-export default SignIn;
+export default Account;

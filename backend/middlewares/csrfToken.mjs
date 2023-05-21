@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 
 import { HttpError } from "../utils/httpError.mjs";
 
-function getCSRFToken(req, res, next) {
+function createCSRFToken(req, res, next) {
   let csrfToken;
 
   try {
@@ -47,4 +47,4 @@ function verifyCSRFToken(req, res, next) {
   next();
 }
 
-export { getCSRFToken, verifyCSRFToken };
+export { createCSRFToken, verifyCSRFToken };

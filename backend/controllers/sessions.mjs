@@ -1,3 +1,5 @@
+import { ObjectId } from "mongodb";
+
 import mongoDBClient from "../utils/mongoDBClient.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
@@ -36,10 +38,6 @@ async function createSession(req, res, next) {
 }
 
 async function verifySession(req, res, next) {
-  /*
-  This middleware should only be called against user requests
-  for protected (i.e. requires authorization) resources.
-  */
   const sessionId = req.signedCookies.sessionId;
 
   if (sessionId === false) {
@@ -54,7 +52,7 @@ async function verifySession(req, res, next) {
     const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
     const sessions = bakiAuctionsDB.collection("sessions");
     const session = await sessions.findOne(
-      { _id: sessionId },
+      { _id: new ObjectId(sessionId) },
       { _id: 0, userId: 1 }
     );
 
@@ -86,18 +84,20 @@ async function deleteSession(req, res, next) {
   try {
     const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
     const sessions = bakiAuctionsDB.collection("sessions");
-    await sessions.deleteOne({ _id: sessionId });
+    await sessions.deleteOne({ _id: new ObjectId(sessionId) });
   } catch (error) {
     return next(new HttpError("Cannot Sign Out", 500));
   }
 
   res.clearCookie("sessionId", {
     httpOnly: true,
-    expires: new Date(0),
+    expires: new Date(),
     secure: true,
     signed: true,
     sameSite: "none",
   });
+
+  next();
 }
 
 export { createSession, verifySession, deleteSession };
