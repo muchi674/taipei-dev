@@ -3,6 +3,12 @@ import axios from "axios";
 
 let signOutSchedulerId;
 
+function cancelScheduledSignOut() {
+  clearTimeout(signOutSchedulerId);
+  signOutSchedulerId = null;
+  localStorage.removeItem("signOutDate");
+}
+
 function useAppSetup() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -12,9 +18,7 @@ function useAppSetup() {
     const response = await axios.delete("/sessions");
 
     axios.defaults.headers.post["X-CSRF-Token"] = response.data.csrfToken;
-    clearTimeout(signOutSchedulerId);
-    signOutSchedulerId = null;
-    localStorage.removeItem("signOutDate");
+    cancelScheduledSignOut();
     setIsSignedIn(false);
     setShowAlert(true);
     setAlertMessage("You are signed out.");
@@ -92,4 +96,4 @@ function useAppSetup() {
   };
 }
 
-export { useAppSetup };
+export { useAppSetup, cancelScheduledSignOut };

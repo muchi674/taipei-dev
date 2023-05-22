@@ -26,7 +26,9 @@ async function createSession(req, res, next) {
   cookie expires in 59 minutes.
   */
 
-  const cookieExpirationDate = new Date(creationDate.getTime() + 60 * 1000);
+  const cookieExpirationDate = new Date(
+    creationDate.getTime() + 59 * 60 * 1000
+  );
 
   res
     .status(201)
@@ -92,6 +94,10 @@ async function deleteSession(req, res, next) {
     return next(new HttpError("Cannot Sign Out", 500));
   }
 
+  next();
+}
+
+function unsetSessionIdCookie(req, res, next) {
   res.clearCookie("sessionId", {
     httpOnly: true,
     expires: new Date(),
@@ -103,4 +109,4 @@ async function deleteSession(req, res, next) {
   next();
 }
 
-export { createSession, verifySession, deleteSession };
+export { createSession, verifySession, deleteSession, unsetSessionIdCookie };

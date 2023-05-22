@@ -2,6 +2,7 @@ import { useContext, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 
 import { AppContext } from "../context/AppContext";
+import { cancelScheduledSignOut } from "../hooks/useAppSetup";
 
 function useSignInWithGoogle() {
   const {
@@ -63,6 +64,38 @@ function useSignInWithGoogle() {
       );
     }
   }, [isSignedIn]);
+
+  const deleteAccount = useCallback(async () => {
+    let response;
+
+    try {
+      response = await axios.delete("/users");
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        setShowAlert(true);
+        setAlertMessage(
+          `${error.response.status}. ${error.response.data.message}`
+        );
+        return;
+      }
+      throw error;
+    }
+
+    let googleErrorMessage;
+    axios.defaults.headers.post["X-CSRF-Token"] = response.data.csrfToken;
+    window.google.accounts.id.revoke(response.data.userId, (revokation) => {
+      if (revokation.successful) {
+        return;
+      }
+      googleErrorMessage = `Something went wrong with Google, but your bakiAuctions account was deleted successfully. ${revokation.error}`;
+    });
+    cancelScheduledSignOut();
+    setIsSignedIn(false);
+    setShowAlert(true);
+    setAlertMessage(googleErrorMessage || "Successfully deleted account");
+  }, [setShowAlert, setAlertMessage, setIsSignedIn]);
+
+  return { deleteAccount };
 }
 
 export { useSignInWithGoogle };

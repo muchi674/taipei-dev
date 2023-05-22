@@ -11,6 +11,12 @@ function createCSRFToken(req, res, next) {
     return next(new HttpError("Cannot Generate CSRF Token", 500));
   }
 
+  /*
+  This function is also called when user deletes their account, which
+  requires the backend to return said user's ID so that the frontend
+  can revoke the OAuth grant used to share the ID token for that user
+  using the Sign In With Google JavaScript API.
+  */
   res
     .cookie("csrfToken", csrfToken, {
       encode: String,
@@ -20,7 +26,7 @@ function createCSRFToken(req, res, next) {
       signed: true,
       sameSite: "none",
     })
-    .json({ csrfToken });
+    .json({ ...req.session, csrfToken });
 }
 
 function verifyCSRFToken(req, res, next) {

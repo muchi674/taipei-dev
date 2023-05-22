@@ -9,19 +9,25 @@ import { useSignInWithGoogle } from "../hooks/useSignInWithGoogle";
 
 function Account() {
   const { isSignedIn, signOut } = useContext(AppContext);
-
-  useSignInWithGoogle();
+  const { deleteAccount } = useSignInWithGoogle();
 
   return (
     <Container className="p-3">
       <Row className="justify-content-md-center">
         {!isSignedIn && <Col id="googleSignInButton" md="auto" />}
         {isSignedIn && (
-          <Button variant="outline-dark" onClick={signOut}>
+          <Button variant="outline-secondary" onClick={signOut}>
             Sign Out
           </Button>
         )}
       </Row>
+      {isSignedIn && (
+        <Row className="justify-content-md-center">
+          <Button variant="outline-danger" onClick={deleteAccount}>
+            Delete Account
+          </Button>
+        </Row>
+      )}
     </Container>
   );
 }
