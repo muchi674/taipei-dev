@@ -1,13 +1,10 @@
-import mongoDBClient from "../utils/mongoDBClient.mjs";
+import { mongoDBClient, users, sessions } from "../utils/mongoDB.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
 async function createUser(req, res, next) {
   const { googleIdTokenPayload } = req;
 
   try {
-    const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
-    const users = bakiAuctionsDB.collection("users");
-
     await users.updateOne(
       { _id: googleIdTokenPayload["sub"] },
       {
@@ -41,14 +38,8 @@ async function deleteUser(req, res, next) {
   try {
     session.startTransaction();
 
-    const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
-
-    await bakiAuctionsDB
-      .collection("users")
-      .deleteOne({ _id: userId }, { session });
-    await bakiAuctionsDB
-      .collection("sessions")
-      .deleteMany({ userId }, { session });
+    await users.deleteOne({ _id: userId }, { session });
+    await sessions.deleteMany({ userId }, { session });
     await session.commitTransaction();
   } catch (error) {
     await session.abortTransaction();

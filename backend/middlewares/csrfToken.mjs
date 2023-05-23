@@ -8,7 +8,7 @@ function createCSRFToken(req, res, next) {
   try {
     csrfToken = randomBytes(16).toString("base64");
   } catch (error) {
-    return next(new HttpError("Cannot Generate CSRF Token", 500));
+    return next(new HttpError("Cannot Create CSRF Token", 500));
   }
 
   /*

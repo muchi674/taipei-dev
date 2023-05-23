@@ -2,6 +2,7 @@ import express from "express";
 
 import { verifyGoogleIdToken } from "../middlewares/googleIdToken.mjs";
 import { createCSRFToken } from "../middlewares/csrfToken.mjs";
+import { deleteCognitoIdentity } from "../middlewares/cognito.mjs";
 import { createUser, deleteUser } from "../controllers/users.mjs";
 import {
   createSession,
@@ -15,6 +16,7 @@ router.post("/", verifyGoogleIdToken, createUser, createSession);
 router.delete(
   "/",
   verifySession,
+  deleteCognitoIdentity,
   deleteUser,
   unsetSessionIdCookie,
   createCSRFToken
