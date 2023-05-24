@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
@@ -14,10 +13,10 @@ function NavHeader() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="users/0/lots">
+            <Nav.Link as={Link} to="/lots">
               Lots
             </Nav.Link>
-            <Nav.Link as={Link} to="users/0/bids">
+            <Nav.Link as={Link} to="/bids">
               Bids
             </Nav.Link>
             <Nav.Link as={Link} to="/account">

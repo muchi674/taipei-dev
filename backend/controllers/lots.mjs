@@ -15,7 +15,7 @@ async function createLot(req, res, next) {
         maxPrice: req.body.maxPrice,
         smallestIncrement: req.body.smallestIncrement,
         maxWait: req.body.maxWait,
-        maxAge: req.body.maxAge,
+        expiresAt: req.body.expiresAt,
         createdAt: Date.now(),
         description: req.body.description,
         photoS3Keys: req.body.photoS3Keys,

@@ -7,7 +7,7 @@ import {
 import { users } from "../utils/mongoDB.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
-const region = process.env.COGNITO_IDENTITY_POOL_REGION;
+const region = process.env.AWS_REGION;
 const identityPoolId = process.env.COGNITO_IDENTITY_POOL_ID;
 const client = new CognitoIdentityClient({ region });
 
@@ -39,6 +39,7 @@ async function getCognitoIdAndToken(req, res, next) {
   }
 
   res.json({
+    userId,
     cognitoIdentityId: response.IdentityId,
     cognitoToken: response.Token,
   });
