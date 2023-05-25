@@ -5,7 +5,7 @@ import { AppContext } from "./context/AppContext";
 import NavHeader from "./components/NavHeader";
 import Notice from "./components/Notice";
 import Explore from "./components/Explore";
-import Lots from "./components/Lots";
+import Lots from "./components/lots/Lots";
 import Account from "./components/Account";
 
 function App() {

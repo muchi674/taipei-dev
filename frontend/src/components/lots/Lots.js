@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 
-import { useCognito } from "../hooks/useCognito";
+import { useCognito } from "../../hooks/useCognito";
 import CreateLot from "./CreateLot";
 
 function Lots() {
