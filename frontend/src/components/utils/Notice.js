@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Alert from "react-bootstrap/Alert";
 
 function Notice({ color, show, setShow, message }) {
