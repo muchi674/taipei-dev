@@ -21,10 +21,10 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
   }, [cognitoIdentityId, cognitoToken]);
 
   const putObject = useCallback(
-    async (file, fileName) => {
+    async (file, lotId) => {
       const command = new PutObjectCommand({
         Bucket: "baki-auctions-taipei-dev",
-        Key: `user-data/${userId}/${fileName}`,
+        Key: `user-data/${userId}/${lotId}/${file.name}`,
         Body: file,
       });
 
@@ -32,14 +32,14 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
         await client.send(command);
       } catch (error) {
         setShowAlert(true);
-        setAlertMessage(`Cannot upload ${fileName} to s3`);
+        setAlertMessage(`Cannot upload ${file.name} to s3`);
         throw error;
       }
     },
     [userId, client, setShowAlert, setAlertMessage]
   );
 
-  return { putObject };
+  return putObject;
 }
 
 export { useS3 };

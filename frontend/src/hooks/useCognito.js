@@ -1,28 +1,34 @@
-import { useContext, useMemo } from "react";
+import { useState, useContext, useEffect } from "react";
 import axios from "axios";
 
 import { AppContext } from "../context/AppContext";
 
-async function useCognito() {
+function useCognito() {
+  const [cognitoCreds, setCognitoCreds] = useState(null);
   const { setShowAlert, setAlertMessage } = useContext(AppContext);
 
-  const credentials = useMemo(async () => {
-    try {
-      const response = await axios.post("/users/cognito");
-      return response.data;
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        setShowAlert(true);
-        setAlertMessage("Please sign in again");
-        return {
-          error: `${error.response.status}. ${error.response.data.message}`,
-        };
+  useEffect(() => {
+    const getCognitoCreds = async () => {
+      try {
+        const response = await axios.post("/users/cognito");
+        setCognitoCreds(response.data);
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          setShowAlert(true);
+          setAlertMessage("Please sign in again");
+          setCognitoCreds({
+            error: `${error.response.status}. ${error.response.data.message}`,
+          });
+          return;
+        }
+        throw error;
       }
-      throw error;
-    }
+    };
+
+    getCognitoCreds();
   }, [setShowAlert, setAlertMessage]);
 
-  return credentials;
+  return cognitoCreds;
 }
 
 export { useCognito };

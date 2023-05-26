@@ -1,7 +1,7 @@
 import { lots, users } from "../utils/mongoDB.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
-async function createLot(req, res, next) {
+async function createLot(req, res) {
   const { userId } = req.session;
   const session = mongoDBClient.startSession();
 
@@ -18,7 +18,6 @@ async function createLot(req, res, next) {
         expiresAt: req.body.expiresAt,
         createdAt: Date.now(),
         description: req.body.description,
-        photoS3Keys: req.body.photoS3Keys,
       },
       { session }
     );
@@ -38,7 +37,7 @@ async function createLot(req, res, next) {
     await session.endSession();
   }
 
-  next();
+  res.json({ lotId: lotResult.insertedId });
 }
 
 export { createLot };

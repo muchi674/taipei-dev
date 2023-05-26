@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAppSetup } from "./hooks/useAppSetup";
 import { AppContext } from "./context/AppContext";
 import NavHeader from "./components/NavHeader";
-import Notice from "./components/Notice";
+import Warning from "./components/Warning";
 import Explore from "./components/Explore";
 import Lots from "./components/lots/Lots";
 import Account from "./components/Account";
@@ -15,7 +15,7 @@ function App() {
     <BrowserRouter>
       <AppContext.Provider value={appSetup}>
         <NavHeader />
-        <Notice />
+        <Warning />
         <Routes>
           <Route path="/home" element={<Explore />} />
           <Route path="/lots" element={<Lots />} />

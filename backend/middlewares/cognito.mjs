@@ -18,6 +18,7 @@ async function getCognitoIdAndToken(req, res, next) {
     Logins: {
       bakiAuctions: userId,
     },
+    TokenDuration: 60 * 60, // seconds
   };
   const command = new GetOpenIdTokenForDeveloperIdentityCommand(input);
   let response;
