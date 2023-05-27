@@ -19,7 +19,7 @@ function App() {
         <Routes>
           <Route path="/home" element={<Explore />} />
           <Route path="/lots" element={<Lots />} />
-          <Route path="/bids" element={<h1>Cocaine is hell of a drug</h1>} />
+          <Route path="/bids" element={<Navigate replace to="/home" />} />
           <Route path="/account" element={<Account />} />
           <Route path="/*" element={<Navigate replace to="/home" />} />
         </Routes>

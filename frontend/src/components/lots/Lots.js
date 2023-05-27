@@ -27,7 +27,7 @@ function Lots() {
     return <Navigate replace to="/account" />;
   }
 
-  return <CreateLot />;
+  return <CreateLot cognitoCreds={cognitoCreds} />;
 }
 
 export default Lots;

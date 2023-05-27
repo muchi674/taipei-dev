@@ -4,7 +4,7 @@ import { fromCognitoIdentity } from "@aws-sdk/credential-providers";
 
 import { AppContext } from "../context/AppContext";
 
-const region = process.env.AWS_REGION;
+const region = process.env.REACT_APP_AWS_REGION;
 
 function useS3({ userId, cognitoIdentityId, cognitoToken }) {
   const { setShowAlert, setAlertMessage } = useContext(AppContext);
@@ -16,6 +16,7 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
         logins: {
           "cognito-identity.amazonaws.com": cognitoToken,
         },
+        clientConfig: { region },
       }),
     });
   }, [cognitoIdentityId, cognitoToken]);

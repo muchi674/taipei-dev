@@ -1,9 +1,10 @@
-import { lots, users } from "../utils/mongoDB.mjs";
+import { mongoDBClient, users, lots } from "../utils/mongoDB.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
 async function createLot(req, res) {
   const { userId } = req.session;
   const session = mongoDBClient.startSession();
+  let lotId;
 
   try {
     session.startTransaction();
@@ -13,19 +14,21 @@ async function createLot(req, res) {
         name: req.body.name,
         minPrice: req.body.minPrice,
         maxPrice: req.body.maxPrice,
-        smallestIncrement: req.body.smallestIncrement,
+        step: req.body.step,
         maxWait: req.body.maxWait,
-        expiresAt: req.body.expiresAt,
+        expiresAt: new Date(req.body.expiresAt),
         createdAt: Date.now(),
         description: req.body.description,
       },
       { session }
     );
 
+    lotId = lotResult.insertedId;
+
     await users.updateOne(
       { _id: userId },
       {
-        $push: { lots: lotResult.insertedId },
+        $push: { lots: lotId },
       },
       { session }
     );
@@ -37,7 +40,7 @@ async function createLot(req, res) {
     await session.endSession();
   }
 
-  res.json({ lotId: lotResult.insertedId });
+  res.json({ lotId });
 }
 
 export { createLot };

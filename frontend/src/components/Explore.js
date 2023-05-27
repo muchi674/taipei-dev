@@ -1,13 +1,12 @@
 import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+import Image from "react-bootstrap/Image";
+
+import bakiImage from "../images/baki.jpg";
 
 function Explore() {
   return (
     <Container className="p-3">
-      <Row className="g-2 p-2">
-        <Col md>I'm Rick James, bitch</Col>
-      </Row>
+      <Image src={bakiImage} rounded width="680" height="700" />
     </Container>
   );
 }

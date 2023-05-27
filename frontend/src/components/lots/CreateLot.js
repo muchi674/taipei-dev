@@ -4,8 +4,10 @@ import axios from "axios";
 import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import Button from "react-bootstrap/Button";
 
-import { AppContext } from "../context/AppContext";
+import { AppContext } from "../../context/AppContext";
 import { useS3 } from "../../hooks/useS3";
 import { isPositive, isInteger } from "../../utils/validators";
 import FormInput from "../utils/FormInput";
@@ -13,15 +15,21 @@ import FormTextArea from "../utils/FormTextArea";
 import FormFile from "../utils/FormFile";
 import DateTimePicker from "../utils/DateTimePicker";
 import Notice from "../utils/Notice";
+import FormValidationErrMsg from "../utils/FormValidationErrMsg";
 
-function CreateLot(cognitoCreds) {
-  const { register, getValues, control, handleSubmit } = useForm();
+function CreateLot({ cognitoCreds }) {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+    getValues,
+    control,
+  } = useForm();
   const { setShowAlert, setAlertMessage } = useContext(AppContext);
   const [showNotice, setShowNotice] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState("");
   const putObject = useS3(cognitoCreds);
   const onSubmit = async (data) => {
-    console.log(`typeof expiresAt: ${typeof data.cLotExpiresAt}`);
     let lotId;
 
     try {
@@ -29,9 +37,9 @@ function CreateLot(cognitoCreds) {
         name: data.cLotName,
         minPrice: data.cLotMinPrice,
         maxPrice: data.cLotMaxPrice,
-        smallestIncrement: data.cLotSmallestIncrement,
+        step: data.cLotStep,
         maxWait: data.cLotMaxWait,
-        expiresAt: data.cLotExpiresAt,
+        expiresAt: data.cLotExpiresAt.getTime(),
         description: data.cLotDescription,
       });
 
@@ -46,7 +54,7 @@ function CreateLot(cognitoCreds) {
     }
 
     try {
-      for (const file in data.cLotImages) {
+      for (const file of data.cLotImages) {
         await putObject(file, lotId);
       }
     } catch (err) {
@@ -87,8 +95,9 @@ function CreateLot(cognitoCreds) {
                 type: "text",
                 register,
                 options: {
-                  required: true,
+                  required: "required",
                 },
+                errors: errors.cLotName,
               }}
             />
           </Row>
@@ -100,10 +109,11 @@ function CreateLot(cognitoCreds) {
                 type: "number",
                 register,
                 options: {
-                  required: true,
+                  required: "required",
                   valueAsNumber: true,
                   validate: isPositive,
                 },
+                errors: errors.cLotMinPrice,
               }}
             />
             <FormInput
@@ -113,7 +123,7 @@ function CreateLot(cognitoCreds) {
                 type: "number",
                 register,
                 options: {
-                  required: true,
+                  required: "required",
                   valueAsNumber: true,
                   validate: {
                     isPositive,
@@ -124,26 +134,32 @@ function CreateLot(cognitoCreds) {
                     },
                   },
                 },
+                errors: errors.cLotMaxPrice,
               }}
             />
             <FormInput
               {...{
-                name: "cLotSmallestIncrement",
-                label: "smallest increment (dollars)",
+                name: "cLotStep",
+                label: "step (dollars)",
                 type: "number",
                 register,
                 options: {
-                  required: true,
+                  required: "required",
                   valueAsNumber: true,
                   validate: {
                     isPositive,
                     canReachMaxPrice: (val) => {
                       const diff =
                         getValues("cLotMaxPrice") - getValues("cLotMinPrice");
-                      return val <= diff && diff % val === 0;
+                      console.log(diff % val);
+                      return (
+                        (val <= diff && diff % val === 0) ||
+                        "step(s) must be able to reach max price"
+                      );
                     },
                   },
                 },
+                errors: errors.cLotStep,
               }}
             />
           </Row>
@@ -155,7 +171,7 @@ function CreateLot(cognitoCreds) {
                 type: "number",
                 register,
                 options: {
-                  required: true,
+                  required: "required",
                   valueAsNumber: true,
                   validate: {
                     isPositive,
@@ -163,9 +179,16 @@ function CreateLot(cognitoCreds) {
                     lteADay: (val) => val <= 60 * 24 || "must <= 24 hours",
                   },
                 },
+                errors: errors.cLotMaxWait,
               }}
             />
-            <DateTimePicker {...{ control, name: "cLotExpiresAt" }} />
+            <DateTimePicker
+              {...{
+                control,
+                name: "cLotExpiresAt",
+                errors: errors.cLotExpiresAt,
+              }}
+            />
           </Row>
           <FormTextArea
             {...{
@@ -182,6 +205,7 @@ function CreateLot(cognitoCreds) {
               },
             }}
           />
+          <FormValidationErrMsg errors={errors.cLotDescription} />
           <FormFile
             {...{
               className: "g-2 p-2",
@@ -204,6 +228,14 @@ function CreateLot(cognitoCreds) {
               },
             }}
           />
+          <FormValidationErrMsg errors={errors.cLotImages} />
+          <Row className="g-2 p-2 justify-content-md-center">
+            <Col md="auto">
+              <Button type="submit" variant="outline-dark">
+                create lot
+              </Button>
+            </Col>
+          </Row>
         </Form>
       </Container>
     </>

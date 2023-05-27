@@ -1,10 +1,11 @@
 import { Controller } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import Col from "react-bootstrap/Col";
-
 import "react-datepicker/dist/react-datepicker.css";
 
-function DateTimePicker({ control, name }) {
+import FormValidationErrMsg from "./FormValidationErrMsg";
+
+function DateTimePicker({ control, name, errors }) {
   return (
     <Col md>
       <Controller
@@ -20,7 +21,9 @@ function DateTimePicker({ control, name }) {
             showTimeInput
           />
         )}
+        rules={{ required: "required" }}
       />
+      <FormValidationErrMsg errors={errors} />
     </Col>
   );
 }
