@@ -1,4 +1,4 @@
-import { mongoDBClient, users, sessions } from "../utils/mongoDB.mjs";
+import { mongoDBClient, users, sessions, lots } from "../utils/mongoDB.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
 async function createUser(req, res, next) {
@@ -40,6 +40,7 @@ async function deleteUser(req, res, next) {
 
     await users.deleteOne({ _id: userId }, { session });
     await sessions.deleteMany({ userId }, { session });
+    await lots.deleteMany({ userId }, { session });
     await session.commitTransaction();
   } catch (error) {
     await session.abortTransaction();

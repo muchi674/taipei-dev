@@ -1,13 +1,10 @@
-import { useContext, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { fromCognitoIdentity } from "@aws-sdk/credential-providers";
-
-import { AppContext } from "../context/AppContext";
 
 const region = process.env.REACT_APP_AWS_REGION;
 
 function useS3({ userId, cognitoIdentityId, cognitoToken }) {
-  const { setShowAlert, setAlertMessage } = useContext(AppContext);
   const client = useMemo(() => {
     return new S3Client({
       region,
@@ -29,15 +26,10 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
         Body: file,
       });
 
-      try {
-        await client.send(command);
-      } catch (error) {
-        setShowAlert(true);
-        setAlertMessage(`Cannot upload ${file.name} to s3`);
-        throw error;
-      }
+      // app should crash if this is unsuccessful
+      await client.send(command);
     },
-    [userId, client, setShowAlert, setAlertMessage]
+    [userId, client]
   );
 
   return putObject;

@@ -29,7 +29,9 @@ function CreateLot({ cognitoCreds }) {
   const [showNotice, setShowNotice] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState("");
   const putObject = useS3(cognitoCreds);
-  const onSubmit = async (data) => {
+  const onSubmit = async (data, e) => {
+    e.preventDefault();
+
     let lotId;
 
     try {
@@ -53,13 +55,8 @@ function CreateLot({ cognitoCreds }) {
       throw error;
     }
 
-    try {
-      for (const file of data.cLotImages) {
-        await putObject(file, lotId);
-      }
-    } catch (err) {
-      console.error(err);
-      return;
+    for (const file of data.cLotImages) {
+      await putObject(file, lotId);
     }
 
     setShowNotice(true);
