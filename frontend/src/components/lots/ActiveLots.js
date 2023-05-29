@@ -1,32 +1,47 @@
+import { useState } from "react";
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 
-function ActiveLots({ activeLots, getActiveLots }) {
+import Loading from "../utils/Loading";
+import ViewLot from "./ViewLot";
+
+function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
+  const [showView, setShowView] = useState(false);
+
+  if (loadingActiveLots) {
+    return <Loading />;
+  }
+
   const rows = [];
   for (const lot of activeLots) {
-    console.log(lot._id);
-    console.log(typeof lot._id);
     rows.push(
-      <tr key={lot._id}>
-        <td>{lot.name}</td>
-        <td>{lot.minPrice}</td>
-        <td>{lot.maxPrice}</td>
-        <td>{lot.maxWait}</td>
-        <td>{new Date(lot.expiresAt).toString()}</td>
-        <td>
-          <Button variant="outline-success" size="sm">
-            view
-          </Button>
-          {"  "}
-          <Button variant="outline-warning" size="sm">
-            edit
-          </Button>
-          {"  "}
-          <Button variant="outline-danger" size="sm">
-            delete
-          </Button>
-        </td>
-      </tr>
+      <>
+        <tr key={`${lot._id}Row`}>
+          <td>{lot.name}</td>
+          <td>{lot.minPrice}</td>
+          <td>{lot.maxPrice}</td>
+          <td>{lot.maxWait}</td>
+          <td>{new Date(lot.expiresAt).toString()}</td>
+          <td>
+            <Button
+              variant="outline-success"
+              size="sm"
+              onClick={() => setShowView(true)}
+            >
+              view
+            </Button>
+            {"  "}
+            <Button variant="outline-warning" size="sm">
+              edit
+            </Button>
+            {"  "}
+            <Button variant="outline-danger" size="sm">
+              delete
+            </Button>
+          </td>
+        </tr>
+        <ViewLot {...{ key: `${lot._id}View`, lot, showView, setShowView }} />
+      </>
     );
   }
 
@@ -35,7 +50,11 @@ function ActiveLots({ activeLots, getActiveLots }) {
       <thead>
         <tr>
           <th>
-            <Button variant="outline-light" size="sm" onClick={getActiveLots}>
+            <Button
+              variant="outline-light"
+              size="sm"
+              onClick={() => setLoadingActiveLots(true)}
+            >
               refresh
             </Button>
           </th>

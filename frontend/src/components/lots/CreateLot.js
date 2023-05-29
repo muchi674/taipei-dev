@@ -8,7 +8,7 @@ import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 
 import { AppContext } from "../../context/AppContext";
-import { useS3 } from "../../hooks/useS3";
+import { LotsContext } from "../../context/LotsContext";
 import { isPositive, isInteger } from "../../utils/validators";
 import FormInput from "../utils/FormInput";
 import FormTextArea from "../utils/FormTextArea";
@@ -17,7 +17,7 @@ import DateTimePicker from "../utils/DateTimePicker";
 import Notice from "../utils/Notice";
 import FormValidationErrMsg from "../utils/FormValidationErrMsg";
 
-function CreateLot({ cognitoCreds }) {
+function CreateLot() {
   const {
     register,
     formState: { errors },
@@ -26,9 +26,9 @@ function CreateLot({ cognitoCreds }) {
     control,
   } = useForm();
   const { setShowAlert, setAlertMessage } = useContext(AppContext);
+  const { putObject } = useContext(LotsContext);
   const [showNotice, setShowNotice] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState("");
-  const putObject = useS3(cognitoCreds);
   const onSubmit = async (data, e) => {
     e.preventDefault();
 
