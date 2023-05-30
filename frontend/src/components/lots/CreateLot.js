@@ -181,6 +181,7 @@ function CreateLot() {
             />
             <DateTimePicker
               {...{
+                label: "expires at",
                 control,
                 name: "cLotExpiresAt",
                 errors: errors.cLotExpiresAt,
@@ -208,7 +209,7 @@ function CreateLot() {
               className: "g-2 p-2",
               name: "cLotImages",
               label: "images",
-              accept: "image/*",
+              accept: ".png, .jpg, .jpeg",
               multiple: true,
               register,
               options: {

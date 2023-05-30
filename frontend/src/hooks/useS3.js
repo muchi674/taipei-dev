@@ -1,14 +1,14 @@
 import { useMemo, useCallback } from "react";
 import {
   S3Client,
-  ListObjectsV2Command,
   PutObjectCommand,
+  ListObjectsV2Command,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { fromCognitoIdentity } from "@aws-sdk/credential-providers";
 
 const region = process.env.REACT_APP_AWS_REGION;
 const bucket = process.env.REACT_APP_S3_BUCKET;
-const bucketURL = process.env.REACT_APP_S3_BUCKET_URL;
 
 function useS3({ userId, cognitoIdentityId, cognitoToken }) {
   const client = useMemo(() => {
@@ -20,7 +20,7 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
       /*
       this shortcircuiting logic is added here because react
       custom hooks cannot be used conditionally (i.e. when it
-      is guaranteed that all props passed to userS3 is valid).
+      is guaranteed that all props expected by userS3 is present).
       */
       return null;
     }
@@ -70,16 +70,20 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
     [userId, client]
   );
 
-  const getObjectURLs = useCallback(
-    async (lotId) => {
-      const objectKeys = await getObjectKeys(lotId);
+  const getObject = useCallback(
+    async (key) => {
+      const command = new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      });
+      const response = await client.send(command);
 
-      return objectKeys.map((key) => bucketURL + key);
+      return response;
     },
-    [getObjectKeys]
+    [client]
   );
 
-  return { putObject, getObjectKeys, getObjectURLs };
+  return { putObject, getObjectKeys, getObject };
 }
 
 export { useS3 };

@@ -12,6 +12,10 @@ import CreateLot from "./CreateLot";
 
 function Lots() {
   const cognitoCreds = useCognito();
+  /*
+  cognitoCreds are fetched asynchronously with useEffect, which means
+  it could still be null when useS3() is called.
+  */
   const s3Functions = useS3(cognitoCreds || {});
   const { loadingActiveLots, setLoadingActiveLots, activeLots } =
     useActiveLots();
@@ -24,7 +28,7 @@ function Lots() {
     return <Loading />;
   }
 
-  if ([cognitoCreds, activeLots].some((element) => "error" in element)) {
+  if ("error" in cognitoCreds) {
     return <Navigate replace to="/account" />;
   }
 
