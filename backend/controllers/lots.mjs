@@ -54,14 +54,15 @@ async function readLots(req, res, next) {
 async function updateLot(req, res, next) {
   const { lotId } = req.params;
 
+  if (req.body.expiresAt <= Date.now()) {
+    return next(new HttpError("expiration datetime <= now", 400));
+  }
+
   try {
     const result = await lots.updateOne(
       { _id: new ObjectId(lotId) },
       {
         $set: {
-          minPrice: req.body.minPrice,
-          maxPrice: req.body.maxPrice,
-          step: req.body.step,
           expiresAt: new Date(req.body.expiresAt),
           lastUpdatedAt: Date.now(),
           description: req.body.description,

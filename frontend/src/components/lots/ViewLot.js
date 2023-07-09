@@ -2,7 +2,7 @@ import { useContext, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Modal from "react-bootstrap/Modal";
 import Carousel from "react-bootstrap/Carousel";
-import ListGroup from "react-bootstrap/ListGroup";
+import Table from "react-bootstrap/Table";
 
 import { LotsContext } from "../../context/LotsContext";
 import { getDataURLFromImageByteArray } from "../../utils/dataURL";
@@ -51,22 +51,40 @@ function ViewLot({ lot, lotBeingViewed, setLotBeingViewed }) {
             );
           })}
         </Carousel>
-        <ListGroup variant="flush">
-          <ListGroup.Item>min price (dollars): {lot.minPrice}</ListGroup.Item>
-          <ListGroup.Item>max price (dollars): {lot.maxPrice}</ListGroup.Item>
-          <ListGroup.Item>step (dollars): {lot.step}</ListGroup.Item>
-          <ListGroup.Item>max wait (minutes): {lot.maxWait}</ListGroup.Item>
-          <ListGroup.Item>max wait (minutes): {lot.expiresAt}</ListGroup.Item>
-          <ListGroup.Item>
-            expires at: {new Date(lot.expiresAt).toString()}
-          </ListGroup.Item>
-          <ListGroup.Item>
-            created at: {new Date(lot.createdAt).toString()}
-          </ListGroup.Item>
-          <ListGroup.Item>
-            description: <p>{lot.description}</p>
-          </ListGroup.Item>
-        </ListGroup>
+        <Table striped bordered hover variant="dark">
+          <tbody>
+            <tr>
+              <th>min price (dollars):</th>
+              <td>{lot.minPrice}</td>
+            </tr>
+            <tr>
+              <th>max price (dollars):</th>
+              <td>{lot.maxPrice}</td>
+            </tr>
+            <tr>
+              <th>step (dollars):</th>
+              <td>{lot.step}</td>
+            </tr>
+            <tr>
+              <th>max wait (minutes):</th>
+              <td>{lot.maxWait}</td>
+            </tr>
+            <tr>
+              <th>expires at:</th>
+              <td>{new Date(lot.expiresAt).toString()}</td>
+            </tr>
+            <tr>
+              <th>created at:</th>
+              <td>{new Date(lot.createdAt).toString()}</td>
+            </tr>
+            <tr>
+              <th>description:</th>
+              <td>
+                <p>{lot.description}</p>
+              </td>
+            </tr>
+          </tbody>
+        </Table>
       </>
     );
   }

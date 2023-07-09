@@ -8,7 +8,7 @@ import { useActiveLots } from "../../hooks/lots/useActiveLots";
 import { LotsContext } from "../../context/LotsContext";
 import Loading from "../utils/Loading";
 import ActiveLots from "./ActiveLots";
-import CreateLot from "./CreateLot";
+import CreateUpdateLot from "./CreateUpdateLot";
 
 function Lots() {
   const cognitoCreds = useCognito();
@@ -50,7 +50,7 @@ function Lots() {
           />
         </Tab>
         <Tab eventKey="createLotTab" title="create">
-          <CreateLot />
+          <CreateUpdateLot inUpdateMode={false} />
         </Tab>
       </Tabs>
     </LotsContext.Provider>

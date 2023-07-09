@@ -5,7 +5,14 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import FormValidationErrMsg from "./FormValidationErrMsg";
 
-function DateTimePicker({ label, control, name, errors }) {
+function DateTimePicker({
+  label,
+  control,
+  name,
+  errors,
+  defaultValue = null,
+  rules = null,
+}) {
   return (
     <Col md>
       <div>{label}</div>
@@ -22,7 +29,8 @@ function DateTimePicker({ label, control, name, errors }) {
             showTimeInput
           />
         )}
-        rules={{ required: "required" }}
+        defaultValue={defaultValue}
+        {...(rules && { rules })}
       />
       <FormValidationErrMsg errors={errors} />
     </Col>

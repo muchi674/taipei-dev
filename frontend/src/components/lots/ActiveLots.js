@@ -5,9 +5,11 @@ import Button from "react-bootstrap/Button";
 
 import Loading from "../utils/Loading";
 import ViewLot from "./ViewLot";
+import CreateUpdateLot from "./CreateUpdateLot";
 
 function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
   const [lotBeingViewed, setLotBeingViewed] = useState(null);
+  const [lotBeingUpdated, setLotBeingUpdated] = useState(null);
 
   if (loadingActiveLots) {
     return <Loading />;
@@ -19,6 +21,7 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
 
   const rows = [];
   const views = [];
+  const updates = [];
   for (const lot of activeLots) {
     rows.push(
       <tr key={`${lot._id}Row`}>
@@ -36,7 +39,11 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
             view
           </Button>
           {"  "}
-          <Button variant="outline-warning" size="sm">
+          <Button
+            variant="outline-warning"
+            size="sm"
+            onClick={() => setLotBeingUpdated(lot._id)}
+          >
             edit
           </Button>
           {"  "}
@@ -53,6 +60,17 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
           lot,
           lotBeingViewed,
           setLotBeingViewed,
+        }}
+      />
+    );
+    updates.push(
+      <CreateUpdateLot
+        {...{
+          key: `${lot._id}Update`,
+          inUpdateMode: true,
+          oldLot: lot,
+          lotBeingUpdated,
+          setLotBeingUpdated,
         }}
       />
     );
@@ -82,6 +100,7 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
         <tbody>{rows}</tbody>
       </Table>
       {views}
+      {updates}
     </>
   );
 }
