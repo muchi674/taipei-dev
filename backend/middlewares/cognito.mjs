@@ -40,7 +40,6 @@ async function getCognitoIdAndToken(req, res, next) {
   }
 
   res.json({
-    userId,
     cognitoIdentityId: response.IdentityId,
     cognitoToken: response.Token,
   });

@@ -63,7 +63,7 @@ async function updateLot(req, res, next) {
       { _id: new ObjectId(lotId) },
       {
         $set: {
-          expiresAt: new Date(req.body.expiresAt),
+          expiresAt: req.body.expiresAt,
           lastUpdatedAt: Date.now(),
           description: req.body.description,
         },

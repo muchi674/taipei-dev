@@ -5,8 +5,8 @@ import { AppContext } from "../../context/AppContext";
 
 function useActiveLots() {
   const { setShowAlert, setAlertMessage } = useContext(AppContext);
-  const [loadingActiveLots, setLoadingActiveLots] = useState(true);
   const [activeLots, setActiveLots] = useState(null);
+  const [loadingActiveLots, setLoadingActiveLots] = useState(true);
   const getActiveLots = useCallback(async () => {
     let response;
 
@@ -24,19 +24,19 @@ function useActiveLots() {
       throw error;
     }
 
-    setActiveLots(response.data);
+    setActiveLots(response.data.data);
+    setLoadingActiveLots(false);
   }, [setShowAlert, setAlertMessage]);
 
   useEffect(() => {
     if (loadingActiveLots) {
       getActiveLots();
-      setLoadingActiveLots(false);
     }
   }, [loadingActiveLots, getActiveLots]);
 
   /*
   activeLots is expected to look something like:
-  {data: [{_id: 0, name: "apple", ... }]}
+  [{_id: 0, name: "apple", ... }, ...]
   */
   return { loadingActiveLots, setLoadingActiveLots, activeLots };
 }

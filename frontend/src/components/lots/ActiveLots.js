@@ -8,8 +8,10 @@ import ViewLot from "./ViewLot";
 import CreateUpdateLot from "./CreateUpdateLot";
 
 function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
-  const [lotBeingViewed, setLotBeingViewed] = useState(null);
-  const [lotBeingUpdated, setLotBeingUpdated] = useState(null);
+  const [lotViewing, setLotViewing] = useState(null);
+  const [lotUpdating, setLotUpdating] = useState(null);
+  const [showView, setShowView] = useState(false);
+  const [showUpdate, setShowUpdate] = useState(false);
 
   if (loadingActiveLots) {
     return <Loading />;
@@ -20,8 +22,6 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
   }
 
   const rows = [];
-  const views = [];
-  const updates = [];
   for (const lot of activeLots) {
     rows.push(
       <tr key={`${lot._id}Row`}>
@@ -34,7 +34,10 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
           <Button
             variant="outline-success"
             size="sm"
-            onClick={() => setLotBeingViewed(lot._id)}
+            onClick={() => {
+              setLotViewing(lot);
+              setShowView(true);
+            }}
           >
             view
           </Button>
@@ -42,7 +45,10 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
           <Button
             variant="outline-warning"
             size="sm"
-            onClick={() => setLotBeingUpdated(lot._id)}
+            onClick={() => {
+              setLotUpdating(lot);
+              setShowUpdate(true);
+            }}
           >
             edit
           </Button>
@@ -53,31 +59,25 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
         </td>
       </tr>
     );
-    views.push(
-      <ViewLot
-        {...{
-          key: `${lot._id}View`,
-          lot,
-          lotBeingViewed,
-          setLotBeingViewed,
-        }}
-      />
-    );
-    updates.push(
-      <CreateUpdateLot
-        {...{
-          key: `${lot._id}Update`,
-          inUpdateMode: true,
-          oldLot: lot,
-          lotBeingUpdated,
-          setLotBeingUpdated,
-        }}
-      />
-    );
   }
 
   return (
     <>
+      <ViewLot
+        {...{
+          lot: lotViewing,
+          showView,
+          setShowView,
+        }}
+      />
+      <CreateUpdateLot
+        {...{
+          inUpdateMode: true,
+          oldLot: lotUpdating,
+          showUpdate,
+          setShowUpdate,
+        }}
+      />
       <Table striped bordered hover variant="dark">
         <thead>
           <tr>
@@ -99,8 +99,6 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
         </thead>
         <tbody>{rows}</tbody>
       </Table>
-      {views}
-      {updates}
     </>
   );
 }

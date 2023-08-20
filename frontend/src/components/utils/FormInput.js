@@ -7,23 +7,33 @@ import FormValidationErrMsg from "./FormValidationErrMsg";
 function FormInput({
   name,
   label,
-  type,
   placeholder,
   register,
-  registerOptions,
   errors,
   inputOptions = {},
+  registerOptions = {},
+  disabled = false,
 }) {
+  const formControl = (
+    <Form.Control
+      placeholder={placeholder}
+      {...register(name, disabled ? { disabled } : registerOptions)}
+      {...inputOptions}
+    />
+  );
+
   return (
     <Col md>
-      <FloatingLabel controlId={name} label={label}>
-        <Form.Control
-          type={type}
-          placeholder={placeholder}
-          {...inputOptions}
-          {...register(name, registerOptions)}
-        />
-      </FloatingLabel>
+      {disabled ? (
+        <>
+          <Form.Label>{label}</Form.Label>
+          {formControl}
+        </>
+      ) : (
+        <FloatingLabel controlId={name} label={label}>
+          {formControl}
+        </FloatingLabel>
+      )}
       <FormValidationErrMsg errors={errors} />
     </Col>
   );

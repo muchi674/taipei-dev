@@ -1,6 +1,7 @@
-import { useContext, useState, useEffect, useCallback } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -11,37 +12,45 @@ import Modal from "react-bootstrap/Modal";
 import { AppContext } from "../../context/AppContext";
 import { LotsContext } from "../../context/LotsContext";
 import { isPositive, isInteger } from "../../utils/validators";
+import ChildAlert from "../utils/ChildAlert";
 import FormInput from "../utils/FormInput";
-import FormTextArea from "../utils/FormTextArea";
 import FormFile from "../utils/FormFile";
 import FormCheck from "../utils/FormCheck";
 import DateTimePicker from "../utils/DateTimePicker";
-import Notice from "../utils/Notice";
 import FormValidationErrMsg from "../utils/FormValidationErrMsg";
 import Loading from "../utils/Loading";
 
 function CreateUpdateLot({
   inUpdateMode,
   oldLot = null,
-  lotBeingUpdated = null,
-  setLotBeingUpdated = null,
+  showUpdate = null,
+  setShowUpdate = null,
 }) {
+  const prefix = !inUpdateMode || oldLot === null ? "cLot" : `u${oldLot._id}`;
   const {
     register,
     formState: { errors },
     handleSubmit,
     getValues,
     control,
-  } = useForm();
+  } = useForm(
+    !inUpdateMode || oldLot === null
+      ? {}
+      : {
+          defaultValues: {
+            [prefix + "Description"]: oldLot.description,
+            [prefix + "ExpiresAt"]: new Date(oldLot.expiresAt),
+          },
+        }
+  );
   const { setShowAlert, setAlertMessage } = useContext(AppContext);
+  const [showChildAlert, setShowChildAlert] = useState(false);
+  const [childAlertMessage, setChildAlertMessage] = useState(null);
   const { getObjectKeys, putObject, deleteObject } = useContext(LotsContext);
-  const [showNotice, setShowNotice] = useState(false);
-  const [noticeMessage, setNoticeMessage] = useState("");
   const [oldImageInfo, setOldImageInfo] = useState(null);
-  const prefix = inUpdateMode ? oldLot._id : "cLot";
 
   useEffect(() => {
-    if (!inUpdateMode) {
+    if (!inUpdateMode || !showUpdate) {
       return;
     }
 
@@ -52,92 +61,96 @@ function CreateUpdateLot({
       for (const key of keys) {
         const keyChunks = key.split("/");
         const oldImageFilename = keyChunks[keyChunks.length - 1];
-        info[key] = oldImageFilename;
+        info[uuidv4()] = { key, oldImageFilename };
       }
 
       setOldImageInfo(info);
     };
 
     getOldImageInfo();
-  }, [inUpdateMode, oldLot, getObjectKeys]);
+  }, [inUpdateMode, showUpdate, oldLot, getObjectKeys]);
 
-  const submitHandler = useCallback(
-    async (data, e) => {
-      e.preventDefault();
+  if (inUpdateMode && oldLot === null) {
+    return null;
+  }
 
-      let msg = "";
+  const submitHandler = async (data, e) => {
+    e.preventDefault();
 
-      if ("objectsToDelete" in data) {
-        const filenames = [];
+    let lotId;
+    const msgs = [];
 
-        for (const key in data["objectsToDelete"]) {
-          await deleteObject(key);
-          filenames.push(oldImageInfo[key]);
-        }
+    try {
+      let response;
 
-        msg += `successfully deleted: ${filenames.join(", ")}`;
+      if (inUpdateMode) {
+        response = await axios.patch(`/lots/${oldLot._id}`, {
+          expiresAt: data[prefix + "ExpiresAt"].getTime(),
+          description: data[prefix + "Description"],
+        });
+        msgs.push(`successfully updated lot: ${oldLot.name}`);
+      } else {
+        response = await axios.post("/lots", {
+          name: data.cLotName,
+          minPrice: data.cLotMinPrice,
+          maxPrice: data.cLotMaxPrice,
+          step: data.cLotStep,
+          maxWait: data.cLotMaxWait,
+          expiresAt: data.cLotExpiresAt.getTime(),
+          description: data.cLotDescription,
+        });
+        msgs.push(`successfully created lot: ${data.cLotName}`);
       }
 
-      let lotId;
+      lotId = response.data.lotId;
+    } catch (error) {
+      if (error.response) {
+        setShowAlert(true);
+        setAlertMessage(
+          error.response.status === 401
+            ? "Please sign in again"
+            : error.response.data
+        );
+        return;
+      }
+      throw error;
+    }
 
-      try {
-        let response;
+    const deletedFiles = [];
 
-        if (inUpdateMode) {
-          response = await axios.patch(`/lots/${oldLot._id}`, {
-            expiresAt: data[`${oldLot._id}ExpiresAt`].getTime(),
-            description: data[`${oldLot._id}Description`],
-          });
-        } else {
-          response = await axios.post("/lots", {
-            name: data.cLotName,
-            minPrice: data.cLotMinPrice,
-            maxPrice: data.cLotMaxPrice,
-            step: data.cLotStep,
-            maxWait: data.cLotMaxWait,
-            expiresAt: data.cLotExpiresAt.getTime(),
-            description: data.cLotDescription,
-          });
-        }
-
-        lotId = response.data.lotId;
-      } catch (error) {
-        if (error.response) {
-          const msg =
-            error.response.status === 401
-              ? "Please sign in again"
-              : error.response.data;
-          setShowAlert(true);
-          setAlertMessage(msg);
-          return;
-        }
-        throw error;
+    for (const imgId in data[prefix + "ObjectsToDelete"] || {}) {
+      if (!data[prefix + "ObjectsToDelete"][imgId]) {
+        continue;
       }
 
-      for (const file of data[prefix + "ObjectsToCreate"]) {
-        await putObject(file, lotId);
-      }
+      await deleteObject(oldImageInfo[imgId].key);
+      deletedFiles.push(oldImageInfo[imgId].oldImageFilename);
+    }
 
-      setShowNotice(true);
-      setNoticeMessage(
-        msg +
-          `successfully uploaded: ${Array.from(
-            data.cLotImages,
-            (file) => file.name
-          ).join(", ")}`
+    if (deletedFiles.length > 0) {
+      msgs.push(`successfully deleted: ${deletedFiles.join(", ")}`);
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/FileList
+    const files = data[prefix + "ObjectsToCreate"];
+
+    for (const file of files) {
+      await putObject(file, inUpdateMode ? oldLot._id : lotId);
+    }
+
+    if (files.length > 0) {
+      msgs.push(
+        `successfully uploaded: ${Array.from(files, (file) => file.name).join(
+          ", "
+        )}`
       );
-    },
-    [
-      deleteObject,
-      inUpdateMode,
-      oldImageInfo,
-      oldLot,
-      prefix,
-      putObject,
-      setAlertMessage,
-      setShowAlert,
-    ]
-  );
+    }
+
+    if (msgs.length > 0) {
+      setShowChildAlert(true);
+      setChildAlertMessage(msgs);
+    }
+  };
 
   /*
   abbreviation guide:
@@ -154,16 +167,12 @@ function CreateUpdateLot({
             {...{
               name: prefix + "Name",
               label: "name",
-              type: "text",
-              placeholder: "dog walk",
+              placeholder: inUpdateMode ? oldLot.name : "dog walk",
+              inputOptions: { type: "text" },
               register,
-              registerOptions: {
-                required: "required",
-              },
-              errors: errors.cLotName,
-              inputOptions: inUpdateMode
-                ? { disabled: true, defaultValue: oldLot.name }
-                : {},
+              registerOptions: inUpdateMode ? {} : { required: "required" },
+              errors: errors[prefix + "Name"],
+              disabled: inUpdateMode ? true : false,
             }}
           />
         </Row>
@@ -172,72 +181,72 @@ function CreateUpdateLot({
             {...{
               name: prefix + "MinPrice",
               label: "min price (dollars)",
-              type: "number",
-              placeholder: 10,
+              placeholder: inUpdateMode ? oldLot.minPrice : 10,
+              inputOptions: { type: "number" },
               register,
-              registerOptions: {
-                required: "required",
-                valueAsNumber: true,
-                validate: isPositive,
-              },
-              errors: errors.cLotMinPrice,
-              inputOptions: inUpdateMode
-                ? { disabled: true, defaultValue: oldLot.minPrice }
-                : {},
+              registerOptions: inUpdateMode
+                ? {}
+                : {
+                    required: "required",
+                    valueAsNumber: true,
+                    validate: isPositive,
+                  },
+              errors: errors[prefix + "MinPrice"],
+              disabled: inUpdateMode ? true : false,
             }}
           />
           <FormInput
             {...{
               name: prefix + "MaxPrice",
               label: "max price (dollars)",
-              type: "number",
-              placeholder: 15,
+              placeholder: inUpdateMode ? oldLot.maxPrice : 15,
+              inputOptions: { type: "number" },
               register,
-              registerOptions: {
-                required: "required",
-                valueAsNumber: true,
-                validate: {
-                  isPositive,
-                  biggerThanMinPrice: (val) => {
-                    return (
-                      val >= getValues("cLotMinPrice") || "must >= min price"
-                    );
+              registerOptions: inUpdateMode
+                ? {}
+                : {
+                    required: "required",
+                    valueAsNumber: true,
+                    validate: {
+                      isPositive,
+                      biggerThanMinPrice: (val) => {
+                        return (
+                          val >= getValues("cLotMinPrice") ||
+                          "must >= min price"
+                        );
+                      },
+                    },
                   },
-                },
-              },
-              errors: errors.cLotMaxPrice,
-              inputOptions: inUpdateMode
-                ? { disabled: true, defaultValue: oldLot.maxPrice }
-                : {},
+              errors: errors[prefix + "MaxPrice"],
+              disabled: inUpdateMode ? true : false,
             }}
           />
           <FormInput
             {...{
               name: prefix + "Step",
               label: "step (dollars)",
-              type: "number",
-              placeholder: 1,
+              placeholder: inUpdateMode ? oldLot.step : 1,
+              inputOptions: { type: "number" },
               register,
-              registerOptions: {
-                required: "required",
-                valueAsNumber: true,
-                validate: {
-                  isPositive,
-                  canReachMaxPrice: (val) => {
-                    const diff =
-                      getValues("cLotMaxPrice") - getValues("cLotMinPrice");
-                    console.log(diff % val);
-                    return (
-                      (val <= diff && diff % val === 0) ||
-                      "step(s) must be able to reach max price"
-                    );
+              registerOptions: inUpdateMode
+                ? {}
+                : {
+                    required: "required",
+                    valueAsNumber: true,
+                    validate: {
+                      isPositive,
+                      canReachMaxPrice: (val) => {
+                        const diff =
+                          getValues("cLotMaxPrice") - getValues("cLotMinPrice");
+                        return (
+                          (val <= diff && diff % val === 0) ||
+                          "step(s) must be able to reach max price"
+                        );
+                      },
+                    },
                   },
-                },
-              },
-              errors: errors.cLotStep,
-              inputOptions: inUpdateMode
-                ? { disabled: true, defaultValue: oldLot.step }
-                : {},
+              errors: errors[prefix + "Step"],
+              disabled: inUpdateMode ? true : false,
             }}
           />
         </Row>
@@ -246,22 +255,22 @@ function CreateUpdateLot({
             {...{
               name: prefix + "MaxWait",
               label: "max wait (minutes)",
-              type: "number",
-              placeholder: 15,
+              placeholder: inUpdateMode ? oldLot.maxWait : 15,
+              inputOptions: { type: "number" },
               register,
-              registerOptions: {
-                required: "required",
-                valueAsNumber: true,
-                validate: {
-                  isPositive,
-                  isInteger,
-                  lteADay: (val) => val <= 60 * 24 || "must <= 24 hours",
-                },
-              },
-              errors: errors.cLotMaxWait,
-              inputOptions: inUpdateMode
-                ? { disabled: true, defaultValue: oldLot.maxWait }
-                : {},
+              registerOptions: inUpdateMode
+                ? {}
+                : {
+                    required: "required",
+                    valueAsNumber: true,
+                    validate: {
+                      isPositive,
+                      isInteger,
+                      lteADay: (val) => val <= 60 * 24 || "must <= 24 hours",
+                    },
+                  },
+              errors: errors[prefix + "MaxWait"],
+              disabled: inUpdateMode ? true : false,
             }}
           />
           <DateTimePicker
@@ -269,53 +278,47 @@ function CreateUpdateLot({
               label: "expires at",
               control,
               name: prefix + "ExpiresAt",
-              errors: errors.cLotExpiresAt,
-              defaultValue: inUpdateMode ? new Date(oldLot.expiresAt) : null,
+              errors: errors[prefix + "ExpiresAt"],
               rules: { required: "required" },
             }}
           />
         </Row>
-        <FormTextArea
-          {...{
-            className: "g-2 p-2",
-            name: prefix + "Description",
-            label: "description",
-            height: "100px",
-            placeholder: "Mu-Chi will walk your dog for 30 minutes",
-            register,
-            registerOptions: {
-              maxLength: {
-                value: 1000,
-                message: "must <= 1000 characters",
+        <Row className="g-2 p-2">
+          <FormInput
+            {...{
+              name: prefix + "Description",
+              label: "description",
+              placeholder: inUpdateMode
+                ? oldLot.description
+                : "Mu-Chi will walk your dog for 30 minutes",
+              inputOptions: { as: "textarea", style: { height: "100px" } },
+              register,
+              registerOptions: {
+                maxLength: {
+                  value: 1000,
+                  message: "must <= 1000 characters",
+                },
               },
-            },
-            inputOptions: inUpdateMode
-              ? { defaultValue: oldLot.description }
-              : {},
-          }}
-        />
-        <FormValidationErrMsg errors={errors.cLotDescription} />
+              errors: errors[prefix + "Description"],
+            }}
+          />
+        </Row>
         {inUpdateMode && oldImageInfo && (
           <Form.Group
             as={Row}
             className="g-2 p-2"
-            controlId={`${oldLot._id}ObjectsToDelete`}
+            controlId={prefix + "ObjectsToDelete"}
           >
             <Form.Label>select images to delete</Form.Label>
-            {Object.entries(oldImageInfo).map(([key, oldImageFilename]) => {
+            {Object.entries(oldImageInfo).map(([imgId, info]) => {
               return (
                 <FormCheck
-                  key={key}
-                  id={key}
-                  label={oldImageFilename}
+                  key={imgId}
+                  id={imgId}
+                  label={info.oldImageFilename}
                   type="checkbox"
                   register={register}
-                  /*
-                  WARNING:
-                  might cause unexpected error if
-                  the original filename contains a period '.'
-                  */
-                  name={`${oldLot._id}ObjectsToDelete.${key}`}
+                  name={`${prefix}ObjectsToDelete.${imgId}`}
                 />
               );
             })}
@@ -343,11 +346,11 @@ function CreateUpdateLot({
             },
           }}
         />
-        <FormValidationErrMsg errors={errors.cLotImages} />
+        <FormValidationErrMsg errors={errors[prefix + "ObjectsToCreate"]} />
         <Row className="g-2 p-2 justify-content-md-center">
           <Col md="auto">
             <Button type="submit" variant="outline-dark">
-              create lot
+              {inUpdateMode ? "udpate lot" : "create lot"}
             </Button>
           </Col>
         </Row>
@@ -357,20 +360,16 @@ function CreateUpdateLot({
 
   return (
     <>
-      <Notice
+      <ChildAlert
         {...{
           color: "success",
-          show: showNotice,
-          setShow: setShowNotice,
-          message: noticeMessage,
+          show: showChildAlert,
+          setShow: setShowChildAlert,
+          message: childAlertMessage,
         }}
       />
       {inUpdateMode ? (
-        <Modal
-          size="lg"
-          show={lotBeingUpdated === oldLot._id}
-          onHide={() => setLotBeingUpdated(null)}
-        >
+        <Modal size="lg" show={showUpdate} onHide={() => setShowUpdate(false)}>
           <Modal.Header closeButton>
             <Modal.Title>{oldLot.name}</Modal.Title>
           </Modal.Header>

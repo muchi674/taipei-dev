@@ -8,12 +8,12 @@ import { LotsContext } from "../../context/LotsContext";
 import { getDataURLFromImageByteArray } from "../../utils/dataURL";
 import Loading from "../utils/Loading";
 
-function ViewLot({ lot, lotBeingViewed, setLotBeingViewed }) {
+function ViewLot({ lot, showView, setShowView }) {
   const { getObjectKeys, getObject } = useContext(LotsContext);
   const [lotImageURLs, setLotImageURLs] = useState(null);
 
   useEffect(() => {
-    if (lotBeingViewed !== lot._id) {
+    if (!showView) {
       return;
     }
 
@@ -33,7 +33,7 @@ function ViewLot({ lot, lotBeingViewed, setLotBeingViewed }) {
     };
 
     getLotImageURLs();
-  }, [lotBeingViewed, lot._id, getObjectKeys, getObject]);
+  }, [showView, lot, getObjectKeys, getObject]);
 
   let body;
 
@@ -89,12 +89,12 @@ function ViewLot({ lot, lotBeingViewed, setLotBeingViewed }) {
     );
   }
 
+  if (lot === null) {
+    return null;
+  }
+
   return (
-    <Modal
-      size="lg"
-      show={lotBeingViewed === lot._id}
-      onHide={() => setLotBeingViewed(null)}
-    >
+    <Modal size="lg" show={showView} onHide={() => setShowView(false)}>
       <Modal.Header closeButton>
         <Modal.Title>{lot.name}</Modal.Title>
       </Modal.Header>

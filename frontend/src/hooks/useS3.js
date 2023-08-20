@@ -11,7 +11,7 @@ import { fromCognitoIdentity } from "@aws-sdk/credential-providers";
 const region = process.env.REACT_APP_AWS_REGION;
 const bucket = process.env.REACT_APP_S3_BUCKET;
 
-function useS3({ userId, cognitoIdentityId, cognitoToken }) {
+function useS3({ cognitoIdentityId, cognitoToken }) {
   const client = useMemo(() => {
     if (
       [cognitoIdentityId, cognitoToken].some(
@@ -43,13 +43,13 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
       // app should crash if this function errors
       const command = new PutObjectCommand({
         Bucket: bucket,
-        Key: `user-data/${userId}/${lotId}/${file.name}`,
+        Key: `user-data/${cognitoIdentityId}/${lotId}/${file.name}`,
         Body: file,
       });
 
       await client.send(command);
     },
-    [userId, client]
+    [cognitoIdentityId, client]
   );
 
   const getObjectKeys = useCallback(
@@ -57,18 +57,15 @@ function useS3({ userId, cognitoIdentityId, cognitoToken }) {
       // app should crash if this function errors
       const command = new ListObjectsV2Command({
         Bucket: bucket,
-        Prefix: `user-data/${userId}/${lotId}/`,
+        Prefix: `user-data/${cognitoIdentityId}/${lotId}/`,
       });
       const response = await client.send(command);
-      const keys = [];
 
-      for (const obj of response.Contents) {
-        keys.push(obj.Key);
-      }
-
-      return keys;
+      return "Contents" in response
+        ? response.Contents.map((obj) => obj.Key)
+        : [];
     },
-    [userId, client]
+    [cognitoIdentityId, client]
   );
 
   const getObject = useCallback(

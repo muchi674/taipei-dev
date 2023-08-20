@@ -10,6 +10,7 @@ function cancelScheduledSignOut() {
 }
 
 function useAppSetup() {
+  const [isDone, setIsDone] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -21,7 +22,7 @@ function useAppSetup() {
     cancelScheduledSignOut();
     setIsSignedIn(false);
     setShowAlert(true);
-    setAlertMessage("You are signed out.");
+    setAlertMessage("You are signed out");
   }, []);
 
   const scheduleSignOut = useCallback(
@@ -57,7 +58,6 @@ function useAppSetup() {
         await axios.post("/sessions");
       } catch (error) {
         if (error.response && error.response.status === 401) {
-          console.log(error.response.data);
           return;
         }
         /*
@@ -78,6 +78,7 @@ function useAppSetup() {
         return;
       }
 
+      setIsDone(true);
       setIsSignedIn(true);
     };
 
@@ -85,6 +86,7 @@ function useAppSetup() {
   }, [scheduleSignOut]);
 
   return {
+    isDone,
     isSignedIn,
     setIsSignedIn,
     signOut,

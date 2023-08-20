@@ -3,7 +3,7 @@ import Alert from "react-bootstrap/Alert";
 
 import { AppContext } from "../context/AppContext";
 
-function Warning() {
+function AppAlert() {
   const { showAlert, setShowAlert, alertMessage } = useContext(AppContext);
 
   return (
@@ -18,4 +18,4 @@ function Warning() {
   );
 }
 
-export default Warning;
+export default AppAlert;

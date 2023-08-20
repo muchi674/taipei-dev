@@ -45,7 +45,7 @@ function Lots() {
             {...{
               loadingActiveLots,
               setLoadingActiveLots,
-              activeLots: activeLots.data,
+              activeLots: activeLots,
             }}
           />
         </Tab>
