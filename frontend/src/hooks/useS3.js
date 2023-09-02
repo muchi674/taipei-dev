@@ -5,6 +5,7 @@ import {
   ListObjectsV2Command,
   GetObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
 import { fromCognitoIdentity } from "@aws-sdk/credential-providers";
 
@@ -94,7 +95,22 @@ function useS3({ cognitoIdentityId, cognitoToken }) {
     [client]
   );
 
-  return { putObject, getObjectKeys, getObject, deleteObject };
+  const deleteObjects = useCallback(
+    async (keys) => {
+      const command = new DeleteObjectsCommand({
+        Bucket: bucket,
+        Delete: {
+          Objects: keys.map((key) => ({ Key: key })),
+        },
+      });
+      const response = await client.send(command);
+
+      return response;
+    },
+    [client]
+  );
+
+  return { putObject, getObjectKeys, getObject, deleteObject, deleteObjects };
 }
 
 export { useS3 };

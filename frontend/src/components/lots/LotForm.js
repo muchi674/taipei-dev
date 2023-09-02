@@ -127,12 +127,12 @@ function LotForm({
 
       lotId = response.data.lotId;
     } catch (error) {
-      if (error.response) {
+      if (error.response && [401, 400].includes(error.response.status)) {
         setShowAlert(true);
         setAlertMessage(
           error.response.status === 401
             ? "Please sign in again"
-            : error.response.data
+            : error.response.data.message
         );
         return;
       }
@@ -174,7 +174,7 @@ function LotForm({
     }
 
     msgs.push(
-      "please go to the active tab and click refresh to see the changes"
+      "please go to the active lots tab and click refresh to see the changes"
     );
 
     setShowChildAlert(true);
