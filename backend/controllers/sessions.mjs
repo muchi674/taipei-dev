@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-import mongoDBClient from "../utils/mongoDBClient.mjs";
+import { sessions } from "../utils/mongoDB.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
 async function createSession(req, res, next) {
@@ -9,8 +9,6 @@ async function createSession(req, res, next) {
   let sessionId;
 
   try {
-    const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
-    const sessions = bakiAuctionsDB.collection("sessions");
     const result = await sessions.insertOne({
       userId: googleIdTokenPayload["sub"],
       createdAt: creationDate,
@@ -54,8 +52,6 @@ async function verifySession(req, res, next) {
   }
 
   try {
-    const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
-    const sessions = bakiAuctionsDB.collection("sessions");
     const session = await sessions.findOne(
       { _id: new ObjectId(sessionId) },
       { _id: 0, userId: 1 }
@@ -87,8 +83,6 @@ async function deleteSession(req, res, next) {
   }
 
   try {
-    const bakiAuctionsDB = mongoDBClient.db("bakiAuctionsDB");
-    const sessions = bakiAuctionsDB.collection("sessions");
     await sessions.deleteOne({ _id: new ObjectId(sessionId) });
   } catch (error) {
     return next(new HttpError("Cannot Sign Out", 500));
