@@ -4,14 +4,15 @@ import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 
 import Loading from "../utils/Loading";
+import ChildAlert from "../utils/ChildAlert";
 import ViewLot from "./ViewLot";
-import CreateUpdateLot from "./CreateUpdateLot";
+import LotForm from "./LotForm";
 
 function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
+  const [showChildAlert, setShowChildAlert] = useState(false);
+  const [childAlertMessage, setChildAlertMessage] = useState(null);
   const [lotViewing, setLotViewing] = useState(null);
   const [lotUpdating, setLotUpdating] = useState(null);
-  const [showView, setShowView] = useState(false);
-  const [showUpdate, setShowUpdate] = useState(false);
 
   if (loadingActiveLots) {
     return <Loading />;
@@ -36,7 +37,6 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
             size="sm"
             onClick={() => {
               setLotViewing(lot);
-              setShowView(true);
             }}
           >
             view
@@ -45,10 +45,7 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
           <Button
             variant="outline-warning"
             size="sm"
-            onClick={() => {
-              setLotUpdating(lot);
-              setShowUpdate(true);
-            }}
+            onClick={() => setLotUpdating(lot)}
           >
             edit
           </Button>
@@ -63,19 +60,27 @@ function ActiveLots({ loadingActiveLots, setLoadingActiveLots, activeLots }) {
 
   return (
     <>
+      <ChildAlert
+        {...{
+          color: "success",
+          show: showChildAlert,
+          setShow: setShowChildAlert,
+          message: childAlertMessage,
+        }}
+      />
       <ViewLot
         {...{
           lot: lotViewing,
-          showView,
-          setShowView,
+          setLotViewing,
         }}
       />
-      <CreateUpdateLot
+      <LotForm
         {...{
           inUpdateMode: true,
+          setShowChildAlert,
+          setChildAlertMessage,
           oldLot: lotUpdating,
-          showUpdate,
-          setShowUpdate,
+          setLotUpdating,
         }}
       />
       <Table striped bordered hover variant="dark">

@@ -5,9 +5,13 @@ import { AppContext } from "../context/AppContext";
 
 function useCognito() {
   const [cognitoCreds, setCognitoCreds] = useState(null);
-  const { setShowAlert, setAlertMessage } = useContext(AppContext);
+  const { isDone, setShowAlert, setAlertMessage } = useContext(AppContext);
 
   useEffect(() => {
+    if (!isDone) {
+      return;
+    }
+
     const getCognitoCreds = async () => {
       try {
         const response = await axios.post("/users/cognito");
@@ -26,7 +30,7 @@ function useCognito() {
     };
 
     getCognitoCreds();
-  }, [setShowAlert, setAlertMessage]);
+  }, [isDone, setShowAlert, setAlertMessage]);
 
   return cognitoCreds;
 }

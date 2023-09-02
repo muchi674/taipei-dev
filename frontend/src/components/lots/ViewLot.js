@@ -8,12 +8,12 @@ import { LotsContext } from "../../context/LotsContext";
 import { getDataURLFromImageByteArray } from "../../utils/dataURL";
 import Loading from "../utils/Loading";
 
-function ViewLot({ lot, showView, setShowView }) {
+function ViewLot({ lot, setLotViewing }) {
   const { getObjectKeys, getObject } = useContext(LotsContext);
   const [lotImageURLs, setLotImageURLs] = useState(null);
 
   useEffect(() => {
-    if (!showView) {
+    if (lot === null) {
       return;
     }
 
@@ -33,7 +33,11 @@ function ViewLot({ lot, showView, setShowView }) {
     };
 
     getLotImageURLs();
-  }, [showView, lot, getObjectKeys, getObject]);
+  }, [lot, getObjectKeys, getObject]);
+
+  if (lot === null) {
+    return null;
+  }
 
   let body;
 
@@ -42,15 +46,17 @@ function ViewLot({ lot, showView, setShowView }) {
   } else {
     body = (
       <>
-        <Carousel>
-          {lotImageURLs.map((url) => {
-            return (
-              <Carousel.Item key={uuidv4()}>
-                <img className="d-block" src={url} alt={lot.name} />
-              </Carousel.Item>
-            );
-          })}
-        </Carousel>
+        {lotImageURLs.length > 0 && (
+          <Carousel>
+            {lotImageURLs.map((url) => {
+              return (
+                <Carousel.Item key={uuidv4()}>
+                  <img className="d-block" src={url} alt={lot.name} />
+                </Carousel.Item>
+              );
+            })}
+          </Carousel>
+        )}
         <Table striped bordered hover variant="dark">
           <tbody>
             <tr>
@@ -89,12 +95,15 @@ function ViewLot({ lot, showView, setShowView }) {
     );
   }
 
-  if (lot === null) {
-    return null;
-  }
-
   return (
-    <Modal size="lg" show={showView} onHide={() => setShowView(false)}>
+    <Modal
+      size="lg"
+      show={lot !== null}
+      onHide={() => {
+        setLotViewing(null);
+        setLotImageURLs(null);
+      }}
+    >
       <Modal.Header closeButton>
         <Modal.Title>{lot.name}</Modal.Title>
       </Modal.Header>

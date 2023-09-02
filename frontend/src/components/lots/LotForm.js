@@ -12,7 +12,6 @@ import Modal from "react-bootstrap/Modal";
 import { AppContext } from "../../context/AppContext";
 import { LotsContext } from "../../context/LotsContext";
 import { isPositive, isInteger } from "../../utils/validators";
-import ChildAlert from "../utils/ChildAlert";
 import FormInput from "../utils/FormInput";
 import FormFile from "../utils/FormFile";
 import FormCheck from "../utils/FormCheck";
@@ -20,37 +19,34 @@ import DateTimePicker from "../utils/DateTimePicker";
 import FormValidationErrMsg from "../utils/FormValidationErrMsg";
 import Loading from "../utils/Loading";
 
-function CreateUpdateLot({
+const uLotDefaultVals = {
+  uLotDescription: "",
+  uLotExpiresAt: null,
+};
+
+function LotForm({
   inUpdateMode,
+  setShowChildAlert,
+  setChildAlertMessage,
   oldLot = null,
-  showUpdate = null,
-  setShowUpdate = null,
+  setLotUpdating = null,
 }) {
-  const prefix = !inUpdateMode || oldLot === null ? "cLot" : `u${oldLot._id}`;
+  const prefix = inUpdateMode ? "uLot" : "cLot";
   const {
     register,
-    formState: { errors },
+    formState: { errors, isSubmitSuccessful },
     handleSubmit,
+    reset,
     getValues,
     control,
-  } = useForm(
-    !inUpdateMode || oldLot === null
-      ? {}
-      : {
-          defaultValues: {
-            [prefix + "Description"]: oldLot.description,
-            [prefix + "ExpiresAt"]: new Date(oldLot.expiresAt),
-          },
-        }
-  );
+  } = useForm(inUpdateMode ? { defaultValues: uLotDefaultVals } : {});
   const { setShowAlert, setAlertMessage } = useContext(AppContext);
-  const [showChildAlert, setShowChildAlert] = useState(false);
-  const [childAlertMessage, setChildAlertMessage] = useState(null);
   const { getObjectKeys, putObject, deleteObject } = useContext(LotsContext);
   const [oldImageInfo, setOldImageInfo] = useState(null);
 
   useEffect(() => {
-    if (!inUpdateMode || !showUpdate) {
+    // setup for updating lot
+    if (!inUpdateMode || oldLot === null) {
       return;
     }
 
@@ -68,7 +64,34 @@ function CreateUpdateLot({
     };
 
     getOldImageInfo();
-  }, [inUpdateMode, showUpdate, oldLot, getObjectKeys]);
+
+    /*
+      defaultValues are cached, so reset is called to replace
+      dummy values supplied when LotForm is first
+      rendered with null oldLot
+      https://react-hook-form.com/docs/useform#defaultValues
+
+      doesn't use prefix to avoid re-running effect each time
+      this component rerenders
+    */
+    reset({
+      uLotDescription: oldLot.description,
+      uLotExpiresAt: new Date(oldLot.expiresAt),
+    });
+  }, [inUpdateMode, oldLot, getObjectKeys, reset]);
+
+  useEffect(() => {
+    if (!isSubmitSuccessful) {
+      return;
+    }
+
+    if (inUpdateMode) {
+      reset(uLotDefaultVals);
+      setLotUpdating(null);
+    } else {
+      reset();
+    }
+  }, [isSubmitSuccessful, inUpdateMode, reset, setLotUpdating]);
 
   if (inUpdateMode && oldLot === null) {
     return null;
@@ -85,8 +108,8 @@ function CreateUpdateLot({
 
       if (inUpdateMode) {
         response = await axios.patch(`/lots/${oldLot._id}`, {
-          expiresAt: data[prefix + "ExpiresAt"].getTime(),
-          description: data[prefix + "Description"],
+          expiresAt: data.uLotExpiresAt.getTime(),
+          description: data.uLotDescription,
         });
         msgs.push(`successfully updated lot: ${oldLot.name}`);
       } else {
@@ -116,6 +139,7 @@ function CreateUpdateLot({
       throw error;
     }
 
+    // only applicable when inUpdateMode is True
     const deletedFiles = [];
 
     for (const imgId in data[prefix + "ObjectsToDelete"] || {}) {
@@ -131,7 +155,10 @@ function CreateUpdateLot({
       msgs.push(`successfully deleted: ${deletedFiles.join(", ")}`);
     }
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/FileList
+    /*
+    applicable for both create and update modes
+    https://developer.mozilla.org/en-US/docs/Web/API/FileList
+    */
     const files = data[prefix + "ObjectsToCreate"];
 
     for (const file of files) {
@@ -146,10 +173,12 @@ function CreateUpdateLot({
       );
     }
 
-    if (msgs.length > 0) {
-      setShowChildAlert(true);
-      setChildAlertMessage(msgs);
-    }
+    msgs.push(
+      "please go to the active tab and click refresh to see the changes"
+    );
+
+    setShowChildAlert(true);
+    setChildAlertMessage(msgs);
   };
 
   /*
@@ -303,27 +332,29 @@ function CreateUpdateLot({
             }}
           />
         </Row>
-        {inUpdateMode && oldImageInfo && (
-          <Form.Group
-            as={Row}
-            className="g-2 p-2"
-            controlId={prefix + "ObjectsToDelete"}
-          >
-            <Form.Label>select images to delete</Form.Label>
-            {Object.entries(oldImageInfo).map(([imgId, info]) => {
-              return (
-                <FormCheck
-                  key={imgId}
-                  id={imgId}
-                  label={info.oldImageFilename}
-                  type="checkbox"
-                  register={register}
-                  name={`${prefix}ObjectsToDelete.${imgId}`}
-                />
-              );
-            })}
-          </Form.Group>
-        )}
+        {inUpdateMode &&
+          oldImageInfo &&
+          Object.keys(oldImageInfo).length > 0 && (
+            <Form.Group
+              as={Row}
+              className="g-2 p-2"
+              controlId={prefix + "ObjectsToDelete"}
+            >
+              <Form.Label>select images to delete</Form.Label>
+              {Object.entries(oldImageInfo).map(([imgId, info]) => {
+                return (
+                  <FormCheck
+                    key={imgId}
+                    id={imgId}
+                    label={info.oldImageFilename}
+                    type="checkbox"
+                    register={register}
+                    name={`${prefix}ObjectsToDelete.${imgId}`}
+                  />
+                );
+              })}
+            </Form.Group>
+          )}
         <FormFile
           {...{
             className: "g-2 p-2",
@@ -358,28 +389,23 @@ function CreateUpdateLot({
     </Container>
   );
 
-  return (
-    <>
-      <ChildAlert
-        {...{
-          color: "success",
-          show: showChildAlert,
-          setShow: setShowChildAlert,
-          message: childAlertMessage,
-        }}
-      />
-      {inUpdateMode ? (
-        <Modal size="lg" show={showUpdate} onHide={() => setShowUpdate(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>{oldLot.name}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>{!oldImageInfo ? <Loading /> : form}</Modal.Body>
-        </Modal>
-      ) : (
-        form
-      )}
-    </>
+  return inUpdateMode ? (
+    <Modal
+      size="lg"
+      show={oldLot !== null}
+      onHide={() => {
+        reset(uLotDefaultVals);
+        setLotUpdating(null);
+      }}
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>{oldLot.name}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>{!oldImageInfo ? <Loading /> : form}</Modal.Body>
+    </Modal>
+  ) : (
+    form
   );
 }
 
-export default CreateUpdateLot;
+export default LotForm;

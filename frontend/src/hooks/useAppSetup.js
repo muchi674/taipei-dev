@@ -58,6 +58,7 @@ function useAppSetup() {
         await axios.post("/sessions");
       } catch (error) {
         if (error.response && error.response.status === 401) {
+          setIsDone(true);
           return;
         }
         /*
@@ -75,11 +76,12 @@ function useAppSetup() {
         setAlertMessage(
           "Sorry, we are unable to resume your session. Please sign in again."
         );
+        setIsDone(true);
         return;
       }
 
-      setIsDone(true);
       setIsSignedIn(true);
+      setIsDone(true);
     };
 
     setupApp();
