@@ -6,6 +6,7 @@ import "./utils/loadEnvironment.mjs";
 import usersRoutes from "./routes/users.mjs";
 import sessionsRoutes from "./routes/sessions.mjs";
 import lotsRoutes from "./routes/lots.mjs";
+import bidsRoutes from "./routes/bids.mjs";
 import { createCSRFToken, verifyCSRFToken } from "./middlewares/csrfToken.mjs";
 import { handleHTTPError } from "./middlewares/customErrorHandler.mjs";
 
@@ -20,6 +21,7 @@ app.post("*", verifyCSRFToken);
 app.use("/users", usersRoutes);
 app.use("/sessions", sessionsRoutes);
 app.use("/lots", lotsRoutes);
+app.use("/bids", bidsRoutes);
 app.use(handleHTTPError);
 
 app.listen(PORT, () => {

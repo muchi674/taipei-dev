@@ -14,5 +14,7 @@ const bakiAuctionsDB = client.db("bakiAuctionsDB");
 const users = bakiAuctionsDB.collection("users");
 const sessions = bakiAuctionsDB.collection("sessions");
 const lots = bakiAuctionsDB.collection("lots");
+const bids = bakiAuctionsDB.collection("bids");
+const timers = bakiAuctionsDB.collection("timers");
 
-export { client as mongoDBClient, users, sessions, lots };
+export { client as mongoDBClient, users, sessions, lots, bids, timers };
