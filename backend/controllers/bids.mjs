@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 import { mongoDBClient, lots, bids, timers } from "../utils/mongoDB.mjs";
 import { HttpError } from "../utils/httpError.mjs";
 
-async function createBid(req, res) {
+async function createBid(req, res, next) {
   const { userId } = req.session;
   const lotId = new ObjectId(req.body.lotId);
   let lot;
@@ -15,7 +15,13 @@ async function createBid(req, res) {
   try {
     lot = await lots.findOne(
       { _id: lotId },
-      { minPrice: 1, maxPrice: 1, step: 1, maxWait: 1, expiresAt: 1 }
+      {
+        minPrice: 1,
+        maxPrice: 1,
+        step: 1,
+        maxWait: 1,
+        expiresAt: 1,
+      }
     );
   } catch (error) {
     return next(new HttpError("Cannot get associated lot", 500));
@@ -51,10 +57,15 @@ async function createBid(req, res) {
         userId,
         price: req.body.price,
         createdAt: bidCreatedAt,
+        stat: "active", // because status is a reserve word
       },
       { session }
     );
-    const lotUpdate = await lots.updateOne(
+    /*
+    winningBid might change between the first time this lot is read
+    and when this bid is placed
+    */
+    const lotPreimage = await lots.findOneAndUpdate(
       {
         _id: lotId,
         $or: [
@@ -76,7 +87,7 @@ async function createBid(req, res) {
       { session }
     );
 
-    if (lotUpdate.matchedCount === 0) {
+    if (lotPreimage === null) {
       // delete invalid bid
       await bids.deleteOne({ _id: bidInsert.insertedId }, { session });
       throw new Error("Oops, you were outbid");
@@ -93,6 +104,14 @@ async function createBid(req, res) {
       { session }
     );
 
+    if ("winningBidId" in lotPreimage) {
+      await bids.updateOne(
+        { _id: lotPreimage.winningBidId },
+        { $set: { stat: "lost" } },
+        { session }
+      );
+    }
+
     await session.commitTransaction();
   } catch (error) {
     await session.abortTransaction();
@@ -104,4 +123,27 @@ async function createBid(req, res) {
   res.json({ bidId });
 }
 
-export { createBid };
+async function readBids(req, res, next) {
+  const { userId } = req.session;
+  let cursor;
+  let data;
+
+  try {
+    cursor = bids.find(
+      { userId, stat: req.body.stat },
+      {
+        sort: { createdAt: -1 },
+        projection: { userId: 0 },
+      }
+    );
+    data = cursor.toArray();
+  } catch (error) {
+    return next(new HttpError("Cannot Read Bids", 500));
+  } finally {
+    await cursor.close();
+  }
+
+  res.json({ data });
+}
+
+export { createBid, readBids };
