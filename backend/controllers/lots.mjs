@@ -63,7 +63,6 @@ async function updateLot(req, res, next) {
       { _id: new ObjectId(lotId) },
       {
         $set: {
-          expiresAt: req.body.expiresAt,
           lastUpdatedAt: Date.now(),
           description: req.body.description,
         },
@@ -84,7 +83,10 @@ async function deleteLot(req, res, next) {
   const { lotId } = req.params;
 
   try {
-    const result = await lots.deleteOne({ _id: new ObjectId(lotId) });
+    const result = await lots.deleteOne({
+      _id: new ObjectId(lotId),
+      winningBidId: { $exist: false },
+    });
 
     if (result.deletedCount === 0) {
       return next(new HttpError("Cannot Find Lot to Delete", 400));
